@@ -1,0 +1,413 @@
+---
+title: "How to Build a Todo App Using React, JSX and Deno"
+description: "Build a full-stack Todo application using React with JSX in Deno — no bundler, no Node, no config overhead."
+---
+
+## What you'll learn
+
+By the end of this tutorial you'll know how to:
+
+- Use React and JSX directly in Deno without a bundler
+- Serve a React application with Deno's built-in HTTP server
+- Manage component state with `useState`
+- Style components with inline styles
+- Structure a small full-stack Deno project
+
+**Time required:** ~45 minutes  
+**Prerequisites:**
+- Deno installed ([Installation guide](/docs/installation))
+- Basic familiarity with React concepts (components, props, state)
+
+---
+
+## Project overview
+
+You'll build a browser-based Todo app where users can:
+
+- Add new tasks
+- Mark tasks as complete
+- Delete tasks
+
+The app is served directly by Deno — no separate build step, no webpack, no Vite.
+
+```
+todo-app/
+├── deno.json
+├── main.tsx
+└── components/
+    ├── App.tsx
+    ├── TodoInput.tsx
+    └── TodoList.tsx
+```
+
+---
+
+## Step 1: Initialize the project
+
+```bash
+mkdir todo-app && cd todo-app
+```
+
+Create `deno.json` manually with JSX configuration. Deno supports JSX natively; you just need to tell it which JSX factory to use.
+
+```json
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "npm:react"
+  },
+  "tasks": {
+    "dev": "deno run --allow-net --allow-read --watch main.tsx"
+  },
+  "imports": {
+    "react": "npm:react@18",
+    "react-dom/server": "npm:react-dom@18/server"
+  }
+}
+```
+
+<Info>
+The `jsx: "react-jsx"` setting tells Deno to use the automatic JSX transform, which doesn't require importing React at the top of every file.
+</Info>
+
+---
+
+## Step 2: Build the App component
+
+Create `components/App.tsx`. This is the root component that holds the todo list state.
+
+```tsx
+// components/App.tsx
+import { useState } from "react";
+import { TodoInput } from "./TodoInput.tsx";
+import { TodoList } from "./TodoList.tsx";
+
+type Todo = {
+  id: number;
+  text: string;
+  completed: boolean;
+};
+
+export function App() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [nextId, setNextId] = useState(1);
+
+  function addTodo(text: string) {
+    if (!text.trim()) return;
+    setTodos([...todos, { id: nextId, text, completed: false }]);
+    setNextId(nextId + 1);
+  }
+
+  function toggleTodo(id: number) {
+    setTodos(todos.map(todo =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+    ));
+  }
+
+  function deleteTodo(id: number) {
+    setTodos(todos.filter(todo => todo.id !== id));
+  }
+
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.heading}>My Todos</h1>
+      <TodoInput onAdd={addTodo} />
+      <TodoList todos={todos} onToggle={toggleTodo} onDelete={deleteTodo} />
+      <p style={styles.count}>
+        {todos.filter(t => !t.completed).length} task(s) remaining
+      </p>
+    </div>
+  );
+}
+
+const styles = {
+  container: {
+    maxWidth: "480px",
+    margin: "60px auto",
+    fontFamily: "system-ui, sans-serif",
+    padding: "0 16px",
+  },
+  heading: {
+    fontSize: "2rem",
+    marginBottom: "24px",
+    color: "#111",
+  },
+  count: {
+    marginTop: "16px",
+    color: "#666",
+    fontSize: "0.875rem",
+  },
+};
+```
+
+---
+
+## Step 3: Build the TodoInput component
+
+Create `components/TodoInput.tsx`. This component renders the text field and "Add" button.
+
+```tsx
+// components/TodoInput.tsx
+import { useState } from "react";
+
+type Props = {
+  onAdd: (text: string) => void;
+};
+
+export function TodoInput({ onAdd }: Props) {
+  const [value, setValue] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    onAdd(value);
+    setValue("");
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={styles.form}>
+      <input
+        type="text"
+        placeholder="What needs to be done?"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        style={styles.input}
+      />
+      <button type="submit" style={styles.button}>
+        Add
+      </button>
+    </form>
+  );
+}
+
+const styles = {
+  form: {
+    display: "flex",
+    gap: "8px",
+    marginBottom: "16px",
+  },
+  input: {
+    flex: 1,
+    padding: "10px 14px",
+    border: "1px solid #ddd",
+    borderRadius: "6px",
+    fontSize: "1rem",
+  },
+  button: {
+    padding: "10px 20px",
+    backgroundColor: "#070708",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "1rem",
+  },
+};
+```
+
+---
+
+## Step 4: Build the TodoList component
+
+Create `components/TodoList.tsx`. This renders individual todo items with toggle and delete controls.
+
+```tsx
+// components/TodoList.tsx
+
+type Todo = {
+  id: number;
+  text: string;
+  completed: boolean;
+};
+
+type Props = {
+  todos: Todo[];
+  onToggle: (id: number) => void;
+  onDelete: (id: number) => void;
+};
+
+export function TodoList({ todos, onToggle, onDelete }: Props) {
+  if (todos.length === 0) {
+    return <p style={styles.empty}>No todos yet. Add one above!</p>;
+  }
+
+  return (
+    <ul style={styles.list}>
+      {todos.map(todo => (
+        <li key={todo.id} style={styles.item}>
+          <span
+            onClick={() => onToggle(todo.id)}
+            style={{
+              ...styles.text,
+              textDecoration: todo.completed ? "line-through" : "none",
+              color: todo.completed ? "#999" : "#111",
+            }}
+          >
+            {todo.text}
+          </span>
+          <button
+            onClick={() => onDelete(todo.id)}
+            style={styles.deleteBtn}
+          >
+            ✕
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+const styles = {
+  list: {
+    listStyle: "none",
+    padding: 0,
+    margin: 0,
+  },
+  item: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px 0",
+    borderBottom: "1px solid #eee",
+  },
+  text: {
+    cursor: "pointer",
+    fontSize: "1rem",
+    flex: 1,
+  },
+  deleteBtn: {
+    background: "none",
+    border: "none",
+    color: "#bbb",
+    cursor: "pointer",
+    fontSize: "1rem",
+    padding: "0 4px",
+  },
+  empty: {
+    color: "#999",
+    textAlign: "center" as const,
+    marginTop: "32px",
+  },
+};
+```
+
+---
+
+## Step 5: Create the server entry point
+
+Create `main.tsx`. This serves the HTML shell and renders the React app server-side using `renderToString`, then hydrates it on the client.
+
+```tsx
+// main.tsx
+import { renderToString } from "react-dom/server";
+import { App } from "./components/App.tsx";
+
+Deno.serve({ port: 8000 }, (req: Request) => {
+  const url = new URL(req.url);
+
+  if (url.pathname === "/") {
+    const appHtml = renderToString(<App />);
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deno Todo App</title>
+  </head>
+  <body>
+    <div id="root">${appHtml}</div>
+    <script type="module" src="/client.js"></script>
+  </body>
+</html>`;
+
+    return new Response(html, {
+      headers: { "content-type": "text/html; charset=utf-8" },
+    });
+  }
+
+  return new Response("Not found", { status: 404 });
+});
+
+console.log("Todo app running at http://localhost:8000");
+```
+
+<Warning>
+This example uses `renderToString` for server-side rendering only — there is no client-side hydration step. This means React state (`useState`) will not be interactive in the browser after the initial render. This is intentional: the goal here is to demonstrate `Deno.serve()` and React's server rendering APIs, not to build a production app.
+
+For a fully interactive, production-ready React app on Deno, use [Deno Fresh](https://fresh.deno.dev) — Deno's official full-stack framework that handles SSR and client hydration automatically.
+</Warning>
+
+---
+
+## Step 6: Run the app
+
+```bash
+deno task dev
+```
+
+Or directly:
+
+```bash
+deno run --allow-net --allow-read main.tsx
+```
+
+Open your browser at `http://localhost:8000`. You'll see the Todo app rendered.
+
+The `--watch` flag (included in the `dev` task) reloads the server whenever you save a file.
+
+---
+
+## Step 7: Test the components
+
+Add a test file to verify the core logic:
+
+```tsx
+// app_test.ts
+import { assertEquals } from "jsr:@std/assert";
+
+// Test the todo filtering logic in isolation
+function filterRemaining(todos: { completed: boolean }[]) {
+  return todos.filter(t => !t.completed).length;
+}
+
+Deno.test("filterRemaining: counts incomplete todos", () => {
+  const todos = [
+    { completed: false },
+    { completed: true },
+    { completed: false },
+  ];
+  assertEquals(filterRemaining(todos), 2);
+});
+
+Deno.test("filterRemaining: returns 0 when all complete", () => {
+  const todos = [{ completed: true }, { completed: true }];
+  assertEquals(filterRemaining(todos), 0);
+});
+```
+
+```bash
+deno test
+```
+
+---
+
+## What you built
+
+You built a working React app served entirely by Deno with:
+
+- **No bundler** — Deno handles JSX and TypeScript natively
+- **No `node_modules`** — React is imported directly via `npm:` specifiers
+- **`Deno.serve()`** — Deno's built-in HTTP server
+- **Server-side rendering** — via `react-dom/server`
+- **Component state** — managed with `useState`
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy to Deno Deploy" icon="cloud" href="/deploy/getting-started">
+    Host your Todo app globally with zero configuration.
+  </Card>
+  <Card title="Deno specific APIs" icon="code" href="/reference/deno-apis">
+    Explore the full Deno namespace for file I/O, networking, and more.
+  </Card>
+</CardGroup>

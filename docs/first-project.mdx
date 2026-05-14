@@ -1,0 +1,153 @@
+---
+title: "First Project"
+description: "Create and run your first Deno project using the built-in project initializer."
+---
+
+## Initialize a project
+
+Deno ships with a project scaffolding command that creates a working project structure in seconds.
+
+```bash
+deno init my_project
+```
+
+This creates a new directory `my_project/` with three files:
+
+```
+my_project/
+├── deno.json
+├── main.ts
+└── main_test.ts
+```
+
+<Info>
+You can also run `deno init` inside an existing empty directory to scaffold in place.
+</Info>
+
+## Explore the generated files
+
+### `deno.json`
+
+This is your project's configuration file. It defines tasks, import maps, compiler options, and more.
+
+```json
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  }
+}
+```
+
+### `main.ts`
+
+The entry point for your application. The generated file exports a simple function:
+
+```typescript
+export function add(a: number, b: number): number {
+  return a + b;
+}
+
+// Learn more at https://docs.deno.com/runtime/manual
+if (import.meta.main) {
+  console.log("Add 2 + 3 =", add(2, 3));
+}
+```
+
+### `main_test.ts`
+
+A test file using Deno's built-in test runner:
+
+```typescript
+import { assertEquals } from "jsr:@std/assert";
+import { add } from "./main.ts";
+
+Deno.test(function addTest() {
+  assertEquals(add(2, 3), 5);
+});
+```
+
+## Run the program
+
+```bash
+cd my_project
+deno main.ts
+```
+
+Output:
+
+```
+Add 2 + 3 = 5
+```
+
+## Run with watch mode
+
+During development, use the `--watch` flag to restart automatically on file changes:
+
+```bash
+deno run --watch main.ts
+```
+
+Or use the task defined in `deno.json`:
+
+```bash
+deno task dev
+```
+
+## Run tests
+
+```bash
+deno test
+```
+
+Output:
+
+```
+running 1 test from ./main_test.ts
+addTest ... ok (3ms)
+
+ok | 1 passed | 0 failed (11ms)
+```
+
+Deno's test runner is built in — no separate testing framework needed.
+
+## Using JavaScript instead of TypeScript
+
+TypeScript is the recommended default in Deno, but JavaScript works too. Rename the files to `.js` and remove the type annotations:
+
+```javascript
+// main.js
+export function add(a, b) {
+  return a + b;
+}
+
+if (import.meta.main) {
+  console.log("Add 2 + 3 =", add(2, 3));
+}
+```
+
+```bash
+deno main.js
+```
+
+## Run a program from a URL
+
+Deno can run code directly from a URL — useful for one-off scripts and examples:
+
+```bash
+deno run https://examples.deno.land/hello-world.ts
+```
+
+<Warning>
+Only run programs from URLs you trust. Deno will still apply permission flags, but always review the source first.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a calculator" icon="calculator" href="/tutorials/calculator-app">
+    Learn Deno fundamentals by building a calculator with modules and tests.
+  </Card>
+  <Card title="Deploy your app" icon="cloud" href="/deploy/getting-started">
+    Push your project to Deno Deploy and serve it globally.
+  </Card>
+</CardGroup>

@@ -1,0 +1,82 @@
+---
+title: "About Deno Deploy"
+description: "Deno Deploy is a serverless platform for running JavaScript and TypeScript applications globally with zero configuration."
+---
+
+## What is Deno Deploy?
+
+Deno Deploy is a serverless platform built for JavaScript and TypeScript applications. It runs your code on a global edge network using V8 isolates — the same engine that powers Deno and Chrome. Requests are handled by the region closest to the user, which means lower latency without any manual infrastructure setup.
+
+You deploy from GitHub or from the command line. Deno Deploy handles routing, TLS, scaling, and global distribution automatically.
+
+<CardGroup cols={2}>
+  <Card title="Global edge network" icon="globe">
+    Code runs in data centers around the world. Requests are automatically routed to the nearest region.
+  </Card>
+  <Card title="Instant deployments" icon="bolt">
+    Push to GitHub and your application is live in seconds. No build servers, no containers to manage.
+  </Card>
+  <Card title="Framework support" icon="layer-group">
+    First-class support for Next.js, Astro, SvelteKit, Fresh, and other modern frameworks.
+  </Card>
+  <Card title="Built-in observability" icon="chart-line">
+    Tracing, metrics, and logs are available in the dashboard out of the box — no third-party integrations needed.
+  </Card>
+</CardGroup>
+
+## How it works
+
+Deno Deploy runs each deployment as a V8 isolate — a lightweight, sandboxed JavaScript environment that starts in milliseconds. Unlike containers, isolates share the V8 engine process without sharing memory, enabling fast cold starts and dense packing on shared hardware.
+
+When a request arrives:
+
+1. Deno Deploy routes it to the nearest healthy region
+2. A V8 isolate for your deployment handles the request
+3. Your code runs and returns a `Response`
+4. The isolate stays warm for subsequent requests
+
+## Platform features
+
+| Feature | Description |
+|---------|-------------|
+| CDN caching | Cache responses at the edge using the Web Cache API |
+| Environment variables | Separate dev and prod secrets managed in the dashboard |
+| Cron jobs | Schedule background tasks with `Deno.cron` |
+| KV storage | Built-in global key-value store (Deno KV) |
+| CI/CD | Automatic deployments on every GitHub push |
+| Instant rollback | Revert to any previous deployment from the dashboard |
+| Custom domains | Attach your own domain with automatic TLS |
+| Self-hosted regions | Deploy to your own infrastructure using the same platform |
+
+## Supported runtimes and frameworks
+
+Deno Deploy supports both Deno and Node.js applications. Supported frameworks include:
+
+- **Fresh** — Deno's official full-stack framework (runs natively)
+- **Next.js** — via Node.js compatibility layer
+- **Astro** — static and server-side rendering
+- **SvelteKit** — adapter available
+- **Hono** — lightweight HTTP framework with first-class Deno support
+
+## Deno Deploy vs. Deploy Classic
+
+Deno Deploy is a major upgrade over the previous Deploy Classic platform.
+
+| | Deploy Classic | Deno Deploy |
+|--|--|--|
+| Deno version | 1.x | 2.0+ |
+| Framework support | Limited | Next.js, Astro, SvelteKit, Fresh |
+| Node.js APIs | No | Yes |
+| Observability | Basic | Tracing, metrics, logs |
+| Database | Deno KV only | Deno KV + external |
+| Self-hosting | No | Yes |
+
+<Warning>
+Deno Deploy Classic is being sunset on **July 20, 2026**. If you're using Deploy Classic, migrate to Deno Deploy before that date.
+</Warning>
+
+## Next steps
+
+<Card title="Get started with Deno Deploy" icon="rocket" href="/deploy/getting-started">
+  Create your first deployment in under five minutes.
+</Card>

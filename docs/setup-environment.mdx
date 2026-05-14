@@ -1,0 +1,149 @@
+---
+title: "Setup Your Environment"
+description: "Configure your editor or IDE for Deno's language server to get autocompletion, type checking, and formatting."
+---
+
+## Overview
+
+Deno ships with a built-in language server (LSP) that powers editor features like autocompletion, inline type errors, go-to-definition, and automatic formatting. To use it, you need to install the Deno extension for your editor and point it at the `deno` binary.
+
+## Visual Studio Code
+
+VS Code is the most straightforward editor to set up for Deno.
+
+<Steps>
+  <Step title="Install the Deno extension">
+    Open the Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`) and search for **Deno** by the Deno Land team. Install it.
+  </Step>
+  <Step title="Initialize workspace configuration">
+    Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run:
+
+    ```
+    Deno: Initialize Workspace Configuration
+    ```
+
+    This creates a `.vscode/settings.json` file in your project:
+
+    ```json
+    {
+      "deno.enable": true
+    }
+    ```
+  </Step>
+  <Step title="Verify it's working">
+    Open a `.ts` file. You should see Deno-aware autocompletion and type checking active. The status bar should show **Deno** as the active language server.
+  </Step>
+</Steps>
+
+<Tip>
+Enable `deno.enable` only in Deno projects, not globally. VS Code will try to apply Deno's module resolution to Node.js projects otherwise, which causes confusing errors.
+</Tip>
+
+### Useful VS Code settings
+
+```json
+{
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.unstable": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  }
+}
+```
+
+## JetBrains IDEs
+
+WebStorm, IntelliJ IDEA, and other JetBrains products support Deno through an official plugin.
+
+<Steps>
+  <Step title="Install the Deno plugin">
+    Go to **File > Settings > Plugins** (or **JetBrains Marketplace**), search for **Deno**, and install it.
+  </Step>
+  <Step title="Enable Deno for your project">
+    Navigate to **File > Settings > Languages & Frameworks > JavaScript > Deno**, check **Enable Deno support for the project**, and set the Deno executable path if it wasn't auto-detected.
+  </Step>
+</Steps>
+
+## Vim / Neovim
+
+<Tabs>
+  <Tab title="Neovim (nvim-lspconfig)">
+    Install `nvim-lspconfig` and add the following to your config:
+
+    ```lua
+    require('lspconfig').denols.setup({
+      root_dir = require('lspconfig').util.root_pattern("deno.json", "deno.jsonc"),
+    })
+    ```
+
+    If you also use `ts_ls` (formerly `tsserver`), ensure each has a distinct root pattern to avoid conflicts:
+
+    ```lua
+    require('lspconfig').ts_ls.setup({
+      root_dir = require('lspconfig').util.root_pattern("package.json"),
+      single_file_support = false,
+    })
+    ```
+  </Tab>
+  <Tab title="Vim (coc.nvim)">
+    Add to your `coc-settings.json`:
+
+    ```json
+    {
+      "deno.enable": true,
+      "deno.lint": true,
+      "deno.unstable": false
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Emacs
+
+Use `lsp-mode` or `eglot` for Deno LSP integration.
+
+```elisp
+;; with lsp-mode
+(add-hook 'typescript-mode-hook #'lsp-deferred)
+```
+
+## Shell completions
+
+Generate shell completions for tab-completion of Deno commands:
+
+<Tabs>
+  <Tab title="bash">
+    ```bash
+    deno completions bash > /etc/bash_completion.d/deno
+    ```
+  </Tab>
+  <Tab title="zsh">
+    ```bash
+    deno completions zsh > ~/.zsh/completions/_deno
+    ```
+  </Tab>
+  <Tab title="fish">
+    ```bash
+    deno completions fish > ~/.config/fish/completions/deno.fish
+    ```
+  </Tab>
+  <Tab title="PowerShell">
+    ```powershell
+    deno completions powershell >> $PROFILE
+    ```
+  </Tab>
+</Tabs>
+
+## AI assistant support
+
+Deno publishes knowledge packs for AI coding assistants at [github.com/denoland/skills](https://github.com/denoland/skills). These help tools like GitHub Copilot and Claude give Deno-accurate suggestions instead of defaulting to Node.js patterns for module imports and `deno.json` configuration.
+
+## Next steps
+
+<Card title="Create your first project" icon="rocket" href="/docs/first-project">
+  Your environment is ready. Build and run your first Deno program.
+</Card>

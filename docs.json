@@ -1,0 +1,101 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Deno Docs",
+  "colors": {
+    "primary": "#070708",
+    "light": "#FFFFFF",
+    "dark": "#070708"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Docs",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "docs/welcome",
+              "docs/installation",
+              "docs/setup-environment",
+              "docs/first-project"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Tutorials",
+        "groups": [
+          {
+            "group": "Tutorials",
+            "pages": [
+              "tutorials/calculator-app",
+              "tutorials/todo-app"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deno Deploy",
+        "groups": [
+          {
+            "group": "Deploy",
+            "pages": [
+              "deploy/about",
+              "deploy/getting-started"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Deno APIs",
+            "pages": [
+              "reference/deno-apis"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/denoland/deno",
+          "icon": "github"
+        },
+        {
+          "anchor": "Community",
+          "href": "https://discord.gg/deno",
+          "icon": "discord"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Blog",
+        "href": "https://deno.com/blog"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Deploy",
+      "href": "https://console.deno.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/deno_land",
+      "github": "https://github.com/denoland"
+    }
+  }
+}

@@ -1,0 +1,348 @@
+---
+title: "Deno Specific APIs"
+description: "Reference for the global Deno namespace — file I/O, networking, subprocesses, HTTP, permissions, FFI, and more."
+---
+
+## Overview
+
+The `Deno` namespace contains APIs that are specific to the Deno runtime and are not part of any web standard. These APIs cover operations like file system access, TCP/UDP networking, spawning subprocesses, serving HTTP, and managing runtime permissions.
+
+All Deno-specific APIs live on the global `Deno` object — no import required.
+
+```typescript
+// Available anywhere in a Deno program
+console.log(Deno.version.deno);   // e.g. "2.3.1"
+console.log(Deno.version.v8);     // e.g. "13.7.152.6"
+console.log(Deno.version.typescript); // e.g. "5.8.3"
+```
+
+---
+
+## File System
+
+File system APIs require the `--allow-read` and/or `--allow-write` permissions.
+
+<AccordionGroup>
+  <Accordion title="Deno.readTextFile / Deno.writeTextFile">
+    The most common file I/O functions. Both are async and return a `Promise`.
+
+    ```typescript
+    // Read a file as a string
+    const content = await Deno.readTextFile("./data.txt");
+    console.log(content);
+
+    // Write a string to a file (creates or overwrites)
+    await Deno.writeTextFile("./output.txt", "Hello, Deno!");
+    ```
+
+    Synchronous variants are also available:
+
+    ```typescript
+    const content = Deno.readTextFileSync("./data.txt");
+    Deno.writeTextFileSync("./output.txt", "Hello, Deno!");
+    ```
+  </Accordion>
+
+  <Accordion title="Deno.readFile / Deno.writeFile">
+    For binary data, use `Deno.readFile` (returns `Uint8Array`) and `Deno.writeFile`.
+
+    ```typescript
+    const bytes = await Deno.readFile("./image.png");
+
+    await Deno.writeFile("./copy.png", bytes);
+    ```
+  </Accordion>
+
+  <Accordion title="Deno.stat / Deno.lstat">
+    Retrieve file metadata.
+
+    ```typescript
+    const info = await Deno.stat("./main.ts");
+    console.log(info.isFile);       // true
+    console.log(info.size);         // file size in bytes
+    console.log(info.mtime);        // last modified time
+    ```
+
+    `Deno.lstat` returns information about a symlink itself rather than its target.
+  </Accordion>
+
+  <Accordion title="Deno.mkdir / Deno.remove">
+    ```typescript
+    // Create a directory (recursive: true creates all parent dirs)
+    await Deno.mkdir("./dist/assets", { recursive: true });
+
+    // Remove a file
+    await Deno.remove("./temp.txt");
+
+    // Remove a directory and its contents
+    await Deno.remove("./dist", { recursive: true });
+    ```
+  </Accordion>
+
+  <Accordion title="Deno.readDir">
+    Iterate over directory entries.
+
+    ```typescript
+    for await (const entry of Deno.readDir("./src")) {
+      console.log(entry.name, entry.isFile ? "file" : "dir");
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Network
+
+Networking APIs require the `--allow-net` permission.
+
+<AccordionGroup>
+  <Accordion title="Deno.connect">
+    Open a TCP or Unix socket connection.
+
+    ```typescript
+    // Connect to a TCP server
+    const conn = await Deno.connect({ hostname: "example.com", port: 80 });
+
+    // Send data
+    const encoder = new TextEncoder();
+    await conn.write(encoder.encode("GET / HTTP/1.0\r\n\r\n"));
+
+    // Read response
+    const buf = new Uint8Array(4096);
+    const n = await conn.read(buf);
+    console.log(new TextDecoder().decode(buf.subarray(0, n ?? 0)));
+
+    conn.close();
+    ```
+  </Accordion>
+
+  <Accordion title="Deno.listen">
+    Start listening on a local address.
+
+    ```typescript
+    const listener = Deno.listen({ port: 8080 });
+    console.log("Listening on :8080");
+
+    for await (const conn of listener) {
+      handleConn(conn); // handle each connection
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## HTTP Server
+
+Deno provides two HTTP server APIs. Use `Deno.serve` for all new code.
+
+### Deno.serve (recommended)
+
+```typescript
+Deno.serve({ port: 8000 }, (req: Request) => {
+  return new Response("Hello, world!", {
+    headers: { "content-type": "text/plain" },
+  });
+});
+```
+
+With async handlers:
+
+```typescript
+Deno.serve(async (req: Request) => {
+  const body = await req.json();
+  return Response.json({ received: body });
+});
+```
+
+`Deno.serve` handles HTTP/1.1 and HTTP/2 automatically.
+
+### Deno.serveHttp (low-level)
+
+`Deno.serveHttp` gives you lower-level access if you need to manage the TCP listener manually. For most use cases, `Deno.serve` is simpler and preferable.
+
+---
+
+## Subprocesses
+
+Requires `--allow-run` permission.
+
+### Deno.Command
+
+```typescript
+const command = new Deno.Command("echo", {
+  args: ["Hello from subprocess"],
+  stdout: "piped",
+});
+
+const { code, stdout, stderr } = await command.output();
+
+console.log(new TextDecoder().decode(stdout)); // "Hello from subprocess\n"
+console.log("Exit code:", code);               // 0
+```
+
+Stream output instead of buffering it:
+
+```typescript
+const command = new Deno.Command("ls", { args: ["-la"], stdout: "piped" });
+const child = command.spawn();
+
+for await (const chunk of child.stdout) {
+  process.stdout.write(chunk);
+}
+```
+
+---
+
+## Permissions
+
+Deno's permission system is queryable and controllable at runtime.
+
+### Deno.permissions.query
+
+```typescript
+const status = await Deno.permissions.query({ name: "read", path: "./data" });
+console.log(status.state); // "granted" | "prompt" | "denied"
+```
+
+### Deno.permissions.request
+
+Prompt the user for a permission at runtime:
+
+```typescript
+const status = await Deno.permissions.request({ name: "net" });
+if (status.state === "granted") {
+  // safe to make network requests
+}
+```
+
+### Deno.permissions.revoke
+
+Downgrade a granted permission back to `"prompt"`:
+
+```typescript
+await Deno.permissions.revoke({ name: "read" });
+```
+
+<Info>
+Revoking a permission does not remove it permanently — the user can grant it again if prompted.
+</Info>
+
+---
+
+## Error classes
+
+Deno exports typed error classes for precise error handling:
+
+```typescript
+try {
+  await Deno.readTextFile("./missing.txt");
+} catch (err) {
+  if (err instanceof Deno.errors.NotFound) {
+    console.error("File does not exist.");
+  } else {
+    throw err;
+  }
+}
+```
+
+Common error classes:
+
+| Class | Triggered when |
+|-------|---------------|
+| `Deno.errors.NotFound` | File or resource does not exist |
+| `Deno.errors.PermissionDenied` | OS-level permission denied |
+| `Deno.errors.ConnectionRefused` | Network connection refused |
+| `Deno.errors.TimedOut` | Operation exceeded time limit |
+| `Deno.errors.WriteZero` | Write operation wrote 0 bytes |
+| `Deno.errors.AlreadyExists` | File or resource already exists |
+| `Deno.errors.InvalidData` | Data is malformed or invalid |
+
+---
+
+## Module metadata (`import.meta`)
+
+| Property | Description |
+|----------|-------------|
+| `import.meta.url` | Fully-qualified URL of the current module |
+| `import.meta.main` | `true` if this is the program entry point |
+| `import.meta.filename` | OS-native resolved file path (local modules only) |
+| `import.meta.dirname` | Directory containing the current module |
+| `import.meta.resolve(specifier)` | Resolve a specifier relative to the current module |
+
+```typescript
+if (import.meta.main) {
+  // This block only runs when the file is the entry point
+  console.log("Running as main:", import.meta.filename);
+}
+```
+
+---
+
+## Foreign Function Interface (FFI)
+
+`Deno.dlopen` lets you call native libraries compiled to the C ABI.
+
+<Info>
+Library file extensions vary by platform: `.so` on Linux, `.dylib` on macOS, `.dll` on Windows. Use `Deno.build.os` to select the correct extension at runtime if your code needs to be cross-platform.
+</Info>
+
+```typescript
+const lib = Deno.dlopen("./libexample.so", {
+  add: { parameters: ["i32", "i32"], result: "i32" },
+});
+
+const result = lib.symbols.add(10, 20);
+console.log(result); // 30
+
+lib.close();
+```
+
+Supported type mappings include `i8`, `i16`, `i32`, `i64`, `u8`, `u16`, `u32`, `u64`, `f32`, `f64`, `pointer`, `buffer`, `function`, and `struct`.
+
+<Warning>
+FFI bypasses Deno's security model. Only load libraries you trust. `Deno.dlopen` requires `--allow-ffi`.
+</Warning>
+
+---
+
+## Program lifecycle
+
+Deno supports the standard browser lifecycle events, making it straightforward to port browser code to Deno:
+
+```typescript
+addEventListener("load", () => {
+  console.log("Module loaded");
+});
+
+addEventListener("unload", () => {
+  console.log("Cleaning up before exit");
+});
+
+// Handle unhandled promise rejections
+addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled rejection:", event.reason);
+  event.preventDefault(); // prevent Deno from printing its own error
+});
+```
+
+To exit the process explicitly:
+
+```typescript
+Deno.exit(0);  // success
+Deno.exit(1);  // failure
+```
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a Calculator App" icon="calculator" href="/tutorials/calculator-app">
+    Apply Deno APIs in a real CLI project with modules and tests.
+  </Card>
+  <Card title="Deploy to Deno Deploy" icon="cloud" href="/deploy/getting-started">
+    Run your Deno program on the global edge network.
+  </Card>
+</CardGroup>

@@ -1,0 +1,95 @@
+---
+title: "Welcome to Deno"
+description: "Deno is a secure JavaScript, TypeScript, and WebAssembly runtime built on V8, Rust, and Tokio."
+---
+
+## What is Deno?
+
+Deno (pronounced "dee-no") is a modern runtime for JavaScript and TypeScript. It is built on V8, Rust, and Tokio — combining raw performance with a first-class developer experience.
+
+Unlike Node.js, Deno ships as a single executable with no package manager, no `node_modules`, and no configuration required to run TypeScript. Security is built in by default: Deno programs cannot access files, the network, or the environment unless you explicitly grant permission.
+
+<CardGroup cols={2}>
+  <Card title="TypeScript out of the box" icon="code">
+    Run `.ts` files directly with no configuration, no build step, and no separate type-checking tool required.
+  </Card>
+  <Card title="Secure by default" icon="shield-check">
+    Deno requires explicit permission flags for file, network, and environment access. Nothing runs without your consent.
+  </Card>
+  <Card title="Built-in tooling" icon="wrench">
+    Deno ships with a linter, formatter, test runner, and bundler. Install nothing extra to get a complete development environment.
+  </Card>
+  <Card title="Node.js compatible" icon="puzzle-piece">
+    Deno supports `npm:` specifiers and Node.js built-in APIs. Most npm packages work without modification.
+  </Card>
+</CardGroup>
+
+## Why Deno?
+
+The JavaScript ecosystem has accumulated decades of tooling complexity. Getting a Node.js project started requires installing a package manager, configuring TypeScript, choosing a linter, and wiring up a test runner — before writing a single line of your actual code.
+
+Deno starts from a different premise: a runtime should come with the tools developers need. Out of the box you get:
+
+- TypeScript compilation
+- `deno fmt` — an opinionated code formatter
+- `deno lint` — a built-in linter
+- `deno test` — a first-class test runner
+- `deno compile` — compile your app to a standalone binary
+- `deno doc` — generate documentation from JSDoc comments
+
+## How Deno handles modules
+
+Deno uses URL-based imports instead of a local `node_modules` folder. You import code directly from a URL:
+
+```typescript
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+```
+
+Or, using the `jsr:` specifier for the JavaScript Registry:
+
+```typescript
+import { assertEquals } from "jsr:@std/assert";
+```
+
+Deno caches downloaded modules locally so they don't re-download on every run. You can also use `npm:` specifiers to import packages from the npm registry:
+
+```typescript
+import express from "npm:express";
+```
+
+## Security model
+
+Every Deno program starts with zero permissions. Granting access is explicit:
+
+| Flag | What it allows |
+|------|----------------|
+| `--allow-read` | Read access to the file system |
+| `--allow-write` | Write access to the file system |
+| `--allow-net` | Network access |
+| `--allow-env` | Access to environment variables |
+| `--allow-run` | Spawning subprocesses |
+| `--allow-all` | All permissions (use with caution) |
+
+You can also scope permissions to specific paths or domains:
+
+```bash
+deno run --allow-read=/tmp --allow-net=api.example.com main.ts
+```
+
+<Info>
+Granting `--allow-all` disables the security model entirely. Use granular permissions in production.
+</Info>
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Install Deno" icon="download" href="/docs/installation">
+    Get Deno running on your machine in under a minute.
+  </Card>
+  <Card title="First Project" icon="rocket" href="/docs/first-project">
+    Create and run your first Deno program.
+  </Card>
+  <Card title="Deploy Globally" icon="cloud" href="/deploy/about">
+    Ship your app to Deno Deploy's global edge network.
+  </Card>
+</CardGroup>

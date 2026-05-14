@@ -1,0 +1,267 @@
+---
+title: "How to Build a Calculator App Using JS and Deno"
+description: "Learn Deno fundamentals by building a modular command-line calculator from scratch using JavaScript and the Deno runtime."
+---
+
+## What you'll learn
+
+By the end of this tutorial you'll know how to:
+
+- Structure a Deno project with multiple modules
+- Import and export functions across files
+- Accept user input from the command line
+- Write and run tests with Deno's built-in test runner
+- Use `deno fmt` and `deno lint` to keep your code clean
+
+**Time required:** ~30 minutes  
+**Prerequisites:** Deno installed ([Installation guide](/docs/installation))
+
+---
+
+## Project overview
+
+You're going to build a command-line calculator that takes two numbers and an operator as arguments and prints the result.
+
+```bash
+deno run main.js add 10 5
+# → Result: 15
+
+deno run main.js divide 20 4
+# → Result: 5
+```
+
+The project has three files:
+
+```
+calculator/
+├── deno.json
+├── main.js
+├── math.js
+└── math_test.js
+```
+
+---
+
+## Step 1: Initialize the project
+
+```bash
+mkdir calculator && cd calculator
+deno init
+```
+
+This creates `deno.json`, `main.ts`, and `main_test.ts`. You'll rename and replace them with JavaScript files in the next steps.
+
+---
+
+## Step 2: Create the math module
+
+Create `math.js`. This file contains the four core operations — each is a pure function that takes two numbers and returns a result.
+
+```javascript
+// math.js
+
+export function add(a, b) {
+  return a + b;
+}
+
+export function subtract(a, b) {
+  return a - b;
+}
+
+export function multiply(a, b) {
+  return a * b;
+}
+
+export function divide(a, b) {
+  if (b === 0) {
+    throw new Error("Cannot divide by zero.");
+  }
+  return a / b;
+}
+```
+
+Each function is pure and exported. You'll import them into `main.js` and test them in `math_test.js`.
+
+---
+
+## Step 3: Create the entry point
+
+Create `main.js`. This file reads command-line arguments, calls the right math function, and prints the result.
+
+```javascript
+// main.js
+import { add, subtract, multiply, divide } from "./math.js";
+
+const [operation, rawA, rawB] = Deno.args;
+
+if (!operation || rawA === undefined || rawB === undefined) {
+  console.error("Usage: deno run main.js <add|subtract|multiply|divide> <a> <b>");
+  Deno.exit(1);
+}
+
+const a = Number(rawA);
+const b = Number(rawB);
+
+if (isNaN(a) || isNaN(b)) {
+  console.error("Error: both arguments must be valid numbers.");
+  Deno.exit(1);
+}
+
+const operations = { add, subtract, multiply, divide };
+const fn = operations[operation];
+
+if (!fn) {
+  console.error(`Unknown operation: "${operation}". Use add, subtract, multiply, or divide.`);
+  Deno.exit(1);
+}
+
+try {
+  const result = fn(a, b);
+  console.log(`Result: ${result}`);
+} catch (err) {
+  console.error(`Error: ${err.message}`);
+  Deno.exit(1);
+}
+```
+
+`Deno.args` is how you access command-line arguments in Deno — it's equivalent to `process.argv.slice(2)` in Node.js.
+
+---
+
+## Step 4: Write tests
+
+Create `math_test.js`. Deno's built-in test runner uses `Deno.test()`.
+
+```javascript
+// math_test.js
+import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { add, subtract, multiply, divide } from "./math.js";
+
+Deno.test("add: returns correct sum", () => {
+  assertEquals(add(2, 3), 5);
+  assertEquals(add(-1, 1), 0);
+  assertEquals(add(0, 0), 0);
+});
+
+Deno.test("subtract: returns correct difference", () => {
+  assertEquals(subtract(10, 3), 7);
+  assertEquals(subtract(0, 5), -5);
+});
+
+Deno.test("multiply: returns correct product", () => {
+  assertEquals(multiply(4, 5), 20);
+  assertEquals(multiply(-2, 3), -6);
+});
+
+Deno.test("divide: returns correct quotient", () => {
+  assertEquals(divide(20, 4), 5);
+  assertEquals(divide(7, 2), 3.5);
+});
+
+Deno.test("divide: throws on division by zero", () => {
+  assertThrows(
+    () => divide(10, 0),
+    Error,
+    "Cannot divide by zero."
+  );
+});
+```
+
+---
+
+## Step 5: Run the tests
+
+```bash
+deno test
+```
+
+Expected output:
+
+```
+running 5 tests from ./math_test.js
+add: returns correct sum ... ok (2ms)
+subtract: returns correct difference ... ok (1ms)
+multiply: returns correct product ... ok (1ms)
+divide: returns correct quotient ... ok (1ms)
+divide: throws on division by zero ... ok (1ms)
+
+ok | 5 passed | 0 failed (9ms)
+```
+
+---
+
+## Step 6: Run the calculator
+
+```bash
+deno run main.js add 10 5
+# Result: 15
+
+deno run main.js divide 100 4
+# Result: 25
+
+deno run main.js multiply 7 8
+# Result: 56
+
+deno run main.js divide 10 0
+# Error: Cannot divide by zero.
+```
+
+---
+
+## Step 7: Add a task to deno.json
+
+Update `deno.json` to add a shortcut for running the calculator:
+
+```json
+{
+  "tasks": {
+    "calc": "deno run main.js",
+    "test": "deno test"
+  }
+}
+```
+
+Now you can run:
+
+```bash
+deno task calc add 10 5
+# Result: 15
+```
+
+---
+
+## Step 8: Format and lint
+
+Keep your code consistent with Deno's built-in tools:
+
+```bash
+deno fmt        # format all files
+deno lint       # check for common issues
+```
+
+<Tip>
+Run `deno fmt --check` in CI to fail the build if any files are unformatted.
+</Tip>
+
+---
+
+## What you built
+
+You created a working command-line calculator using plain JavaScript and Deno. Along the way you used:
+
+- ES modules with `import`/`export` (no bundler, no `require`)
+- `Deno.args` to read command-line input
+- `Deno.test()` and `jsr:@std/assert` for testing
+- `deno.json` tasks for shortcuts
+- `deno fmt` and `deno lint` for code quality
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a Todo app with React" icon="react" href="/tutorials/todo-app">
+    Extend your Deno skills with JSX and a UI framework.
+  </Card>
+  <Card title="Deploy your project" icon="cloud" href="/deploy/getting-started">
+    Push your app to Deno Deploy and serve it globally.
+  </Card>
+</CardGroup>

@@ -1,0 +1,180 @@
+---
+title: "Getting Started with Deno Deploy"
+description: "Deploy your first Deno application to the global edge network in under five minutes."
+---
+
+## Prerequisites
+
+- Deno installed locally ([Installation guide](/docs/installation))
+- A GitHub account (for GitHub-based deployments)
+
+## Option 1: Deploy from the dashboard
+
+The quickest way to get started is through the Deno Deploy dashboard.
+
+<Steps>
+  <Step title="Create an account">
+    Go to [console.deno.com](https://console.deno.com) and sign in with GitHub.
+  </Step>
+  <Step title="Create a new application">
+    Click **New Application** in your dashboard. Give it a name — this becomes part of your deployment URL (`your-app.deno.dev`).
+  </Step>
+  <Step title="Connect your GitHub repository">
+    Select **Deploy from GitHub**, choose your repository, and set the entry point file (usually `main.ts`).
+  </Step>
+  <Step title="Deploy">
+    Click **Deploy**. Deno Deploy builds and deploys your application in seconds. Your app is now live at `https://your-app.deno.dev`.
+  </Step>
+</Steps>
+
+Every subsequent push to your connected branch triggers a new deployment automatically.
+
+---
+
+## Option 2: Deploy from the command line
+
+For programmatic or CI-based workflows, use `deployctl`.
+
+<Steps>
+  <Step title="Install deployctl">
+    ```bash
+    deno install -A jsr:@deno/deployctl --global
+    ```
+
+    Verify it installed correctly:
+
+    ```bash
+    deployctl --help
+    ```
+  </Step>
+  <Step title="Write your application">
+    Create a simple HTTP server in `main.ts`:
+
+    ```typescript
+    Deno.serve(() => new Response("Hello from Deno Deploy!"));
+    ```
+
+    Test it locally:
+
+    ```bash
+    deno run --allow-net main.ts
+    ```
+
+    Open `http://localhost:8000` to confirm it works.
+  </Step>
+  <Step title="Deploy">
+    From your project directory:
+
+    ```bash
+    deployctl deploy
+    ```
+
+    The first time you run this, `deployctl` opens a browser window to authenticate via GitHub. After authenticating, your application deploys to the global edge network.
+
+    Output:
+
+    ```
+    ✔ Authenticated as your-github-username
+    ✔ Deploying to main.ts
+    ✔ Deployed to https://your-app.deno.dev
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Writing a deployable application
+
+Deno Deploy runs any file that uses `Deno.serve()`. Here's a slightly more complete example that handles multiple routes:
+
+```typescript
+// main.ts
+Deno.serve((req: Request) => {
+  const url = new URL(req.url);
+
+  if (url.pathname === "/") {
+    return new Response("Welcome to my Deno app!", {
+      headers: { "content-type": "text/plain" },
+    });
+  }
+
+  if (url.pathname === "/health") {
+    return new Response(JSON.stringify({ status: "ok" }), {
+      headers: { "content-type": "application/json" },
+    });
+  }
+
+  return new Response("Not found", { status: 404 });
+});
+```
+
+<Info>
+Deno Deploy listens on port 8080 by default in production. You don't specify a port in `Deno.serve()` — Deploy handles binding automatically.
+</Info>
+
+---
+
+## Environment variables
+
+Set environment variables in the dashboard under **Settings > Environment Variables**. You can have separate values for production and preview environments.
+
+Access them in your application:
+
+```typescript
+const apiKey = Deno.env.get("API_KEY");
+
+if (!apiKey) {
+  throw new Error("API_KEY environment variable is required.");
+}
+```
+
+Run locally with env vars:
+
+```bash
+deno run --allow-net --allow-env --env-file=.env main.ts
+```
+
+<Warning>
+Never commit secrets to your repository. Use environment variables for API keys, tokens, and passwords.
+</Warning>
+
+---
+
+## Preview deployments
+
+Every pull request to your connected GitHub repository creates a **preview deployment** at a unique URL. Preview deployments:
+
+- Are isolated from production
+- Use preview environment variables
+- Are automatically deleted when the pull request is closed
+
+This lets you share and review changes before merging to production.
+
+---
+
+## Custom domains
+
+<Steps>
+  <Step title="Add your domain">
+    In the dashboard, go to **Settings > Domains** and click **Add Domain**. Enter your domain name.
+  </Step>
+  <Step title="Update your DNS">
+    Add the CNAME record shown in the dashboard to your DNS provider. Point it to `your-app.deno.dev`.
+  </Step>
+  <Step title="Wait for propagation">
+    DNS changes can take up to 24 hours. Deno Deploy provisions a TLS certificate automatically once propagation completes.
+  </Step>
+</Steps>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build a Todo app" icon="list-check" href="/tutorials/todo-app">
+    Build a React app and deploy it to Deno Deploy.
+  </Card>
+  <Card title="Deno specific APIs" icon="code" href="/reference/deno-apis">
+    Learn the Deno namespace APIs available in your deployed functions.
+  </Card>
+</CardGroup>

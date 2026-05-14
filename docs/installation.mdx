@@ -1,0 +1,148 @@
+---
+title: "Installation"
+description: "Install Deno on macOS, Linux, or Windows in under a minute. Deno ships as a single binary with no external dependencies."
+---
+
+## System requirements
+
+Deno works on macOS, Linux, and Windows. It ships as a single self-contained binary — no separate runtime, no dependency manager, nothing to configure after downloading.
+
+<Warning>
+Windows users require Windows 10 version 1709 or later due to OS API dependencies.
+</Warning>
+
+## Install Deno
+
+<Tabs>
+  <Tab title="macOS / Linux">
+    Run the install script in your terminal:
+
+    ```bash
+    curl -fsSL https://deno.land/install.sh | sh
+    ```
+
+    The script installs the `deno` binary to `~/.deno/bin/` and prints instructions for adding it to your `PATH`.
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    Open PowerShell and run:
+
+    ```powershell
+    irm https://deno.land/install.ps1 | iex
+    ```
+  </Tab>
+  <Tab title="Homebrew (macOS)">
+    If you use Homebrew:
+
+    ```bash
+    brew install deno
+    ```
+  </Tab>
+</Tabs>
+
+## Install via package managers
+
+<AccordionGroup>
+  <Accordion title="npm">
+    ```bash
+    npm install -g deno
+    ```
+  </Accordion>
+  <Accordion title="MacPorts">
+    ```bash
+    sudo port install deno
+    ```
+  </Accordion>
+  <Accordion title="Scoop (Windows)">
+    ```bash
+    scoop install deno
+    ```
+  </Accordion>
+  <Accordion title="Chocolatey (Windows)">
+    ```bash
+    choco install deno
+    ```
+  </Accordion>
+  <Accordion title="Winget (Windows)">
+    ```bash
+    winget install DenoLand.Deno
+    ```
+  </Accordion>
+  <Accordion title="Build from source (Cargo)">
+    Requires a working Rust toolchain:
+
+    ```bash
+    cargo install deno --locked
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Verify the installation
+
+After installation, confirm Deno is available:
+
+```bash
+deno --version
+```
+
+You should see output similar to:
+
+```
+deno 2.3.1 (stable, release, aarch64-apple-darwin)
+v8 13.7.152.6
+typescript 5.8.3
+```
+
+## Update Deno
+
+Keep Deno current using the built-in upgrade command:
+
+```bash
+deno upgrade
+```
+
+To install a specific version:
+
+```bash
+deno upgrade --version 2.0.0
+```
+
+## Using a version manager
+
+If you manage multiple Deno versions across projects, both **asdf** and **vfox** have Deno plugins.
+
+<Tabs>
+  <Tab title="asdf">
+    ```bash
+    asdf plugin add deno
+    asdf install deno latest
+    asdf global deno latest
+    ```
+  </Tab>
+  <Tab title="vfox">
+    ```bash
+    vfox add deno
+    vfox install deno@latest
+    vfox use --global deno@latest
+    ```
+  </Tab>
+</Tabs>
+
+## Docker
+
+Official Deno images are available on Docker Hub:
+
+```bash
+docker pull denoland/deno
+docker run -it denoland/deno deno --version
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Set up your editor" icon="laptop-code" href="/docs/setup-environment">
+    Enable Deno's language server in VS Code, JetBrains, or Vim.
+  </Card>
+  <Card title="Create your first project" icon="rocket" href="/docs/first-project">
+    Initialize a project and run your first Deno program.
+  </Card>
+</CardGroup>
